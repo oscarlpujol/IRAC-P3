@@ -1,0 +1,25 @@
+<html>
+
+<head></head>
+<body>
+         <h1>Esta es mi pagina index.html</h1>
+         <p>Aqui va todo mi contenido de la pagina inicial que debe cargar mi dominio</p>
+<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script> <!--Esto es lo que se ha anyadido para hacer que funcione lo de abajo, si no no va-->
+</body>
+<video class="dashjs-player" autoplay controls preload="auto">
+    <source src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" type="application/dash+xml"/>
+</video>
+
+
+<script>
+    //EN el "getting started" de aqui https://github.com/Dash-Industry-Forum/dash.js es de donde ha salido lo de poner la linea del script
+    //Se utiliza el comando python3 -m http.server para lanzar el servidor, el de la practica es para python2 y anteriores
+    var player;
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+    function init(){
+        player = dashjs.MediaPlayerFactory.create( document.querySelector(".dashjs-player"));
+    };
+</script>
+</html>
