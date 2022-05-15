@@ -1,0 +1,142 @@
+<html>
+
+<head></head>
+<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+
+<body>
+  <h1>Esta es mi pagina index.html</h1>
+  <p>Aqui va todo mi contenido de la pagina inicial que debe cargar mi dominio</p>
+  <!--Esto es lo que se ha anyadido para hacer que funcione lo de abajo, si no no va-->
+  <div class="code">
+    <video class="dashjs-player" autoplay controls preload="auto" muted style="width: 75vw;">
+    </video>
+  </div>
+  <div class="code">
+    <p>Video Bitrate: <span id="bitrate"></span> kbps</p>
+    <p>Video Buffer: <span id="buffer"></span> seconds</p>
+    <p>Video Representation: <span id="representation"></span></p>
+    <canvas id="myChart" style="max-width: 75vw; max-height: 60vh;"></canvas>
+  </div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+  var tiempo = 0;
+  const time = [];
+  const buffer = [];
+  const bits = [];
+
+  const data = {
+    labels: time,
+    datasets: [{
+      label: 'Buffer Level',
+      backgroundColor: 'rgba(255, 99, 132, 0.5)',
+      borderColor: 'rgb(255, 99, 132)',
+      data: buffer,
+      yAxisID: 'y',
+      fill: true
+    },
+    {
+      label: 'Bitrate',
+      backgroundColor: 'rgba(11, 177, 242, 0.5)',
+      borderColor: 'rgb(11, 177, 242)',
+      data: bits,
+      yAxisID: 'y1',
+      fill: true
+    }
+    ]
+  };
+
+  const config = {
+    type: 'line',
+    data: data,
+    options: {
+      responsive: true,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      stacked: false,
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Buffer Level ()'
+          }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Bitrate (kbps)'
+          },
+
+          // grid line settings
+          grid: {
+            drawOnChartArea: true,
+          },
+        },
+      }
+    },
+  };
+
+  const myChart = new Chart(
+    document.getElementById('myChart'),
+    config
+  );
+  const protData = {
+    "org.w3.clearkey": {
+      "clearkeys": {
+        "oW5AK5BW43HzbTSKpiu3SQ": "hyN9IKGfWKdAwFaE5pm0qg"
+      }
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", function () {
+    init();
+  });
+ 
+  function init() {
+    var video,
+      player,
+      mpd_url = "./output/stream.mpd";
+    video = document.querySelector("video");
+    player = dashjs.MediaPlayer().create();
+    player.setProtectionData(protData);
+    player.initialize(video, mpd_url, true);
+    player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function () {
+      clearInterval(eventPoller);
+    });
+    var eventPoller = setInterval(function () {
+      var streamInfo = player.getActiveStream().getStreamInfo();
+      var dashMetrics = player.getDashMetrics();
+      var dashAdapter = player.getDashAdapter();
+      if (dashMetrics && streamInfo) {
+        const periodIdx = streamInfo.index;
+        var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+        var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+        var bitrate = repSwitch ? Math.round(dashAdapter.
+          getBandwidthForRepresentation(repSwitch.to,
+            periodIdx) / 1000) : NaN;
+        document.getElementById('buffer').innerText = bufferLevel + " secs";
+        document.getElementById('bitrate').innerText = bitrate + " Kbps";
+        document.getElementById('representation').innerText = repSwitch.to;
+      }
+      tiempo = new Date();
+      tiempo = tiempo.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
+      time.push(tiempo);
+      buffer.push(bufferLevel);
+      bits.push(bitrate);
+      myChart.update();
+    }, 500);
+  }
+</script>
+
+</html>
